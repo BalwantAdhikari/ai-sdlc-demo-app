@@ -11,7 +11,7 @@ https://github.com/BalwantAdhikari/ai-sdlc-demo-app/pull/1
 
 ## video link
 
-[TBD]
+https://nagarro-my.sharepoint.com/:v:/p/balwant_adhikari/IQAu2eRpLmXdSrtvq1YsXC0pAfn08TIte36J80rQ58hqL-0?nav=eyJyZWZlcnJhbEluZm8iOnsicmVmZXJyYWxBcHAiOiJPbmVEcml2ZUZvckJ1c2luZXNzIiwicmVmZXJyYWxBcHBQbGF0Zm9ybSI6IldlYiIsInJlZmVycmFsTW9kZSI6InZpZXciLCJyZWZlcnJhbFZpZXciOiJNeUZpbGVzTGlua0NvcHkifX0&e=CNH4df
 
 ---
 
