@@ -4,6 +4,15 @@
 
 https://github.com/BalwantAdhikari/ai-sdlc-demo-app
 
+## PR link
+
+https://github.com/BalwantAdhikari/ai-sdlc-demo-app/pull/1
+
+
+## video link
+
+[TBD]
+
 ---
 
 # AI Interaction Traceability Write-up

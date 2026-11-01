@@ -1,4 +1,11 @@
+using InvoiceApp.Api.Auth;
+using InvoiceApp.Api.Controllers;
 using InvoiceApp.Domain;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Controllers;
+using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.AspNetCore.Routing;
 using Xunit;
 
 namespace InvoiceApp.Tests;
@@ -10,6 +17,55 @@ public class ApprovalServiceTests
 
     private static ApprovalService ServiceFor(params Invoice[] invoices) =>
         new(new FakeInvoiceRepository(invoices));
+
+    [Theory]
+    [InlineData("Approver")]
+    [InlineData("Admin")]
+    [InlineData("Manager")]
+    [InlineData("Director")]
+    public void ApprovalsController_AllowsManagerAndDirectorApprovalRoles(string role)
+    {
+        var attribute = typeof(ApprovalsController)
+            .GetCustomAttributes(typeof(RequireRoleAttribute), inherit: true)
+            .OfType<RequireRoleAttribute>()
+            .Single();
+
+        var httpContext = new DefaultHttpContext();
+        httpContext.Items[HttpContextExtensions.SessionKey] = new UserSession("demo.user", role);
+
+        var actionContext = new ActionContext(
+            httpContext,
+            new RouteData(),
+            new ControllerActionDescriptor());
+
+        var context = new ActionExecutingContext(
+            actionContext,
+            new List<IFilterMetadata>(),
+            new Dictionary<string, object?>(),
+            controller: new ApprovalsController(new ApprovalService(new FakeInvoiceRepository())));
+
+        attribute.OnActionExecuting(context);
+
+        Assert.Null(context.Result);
+    }
+
+    [Fact]
+    public void ApprovalsController_UsesSessionRoleInsteadOfUsernameForApprovalRules()
+    {
+        var controller = new ApprovalsController(new ApprovalService(new FakeInvoiceRepository(
+            InvoiceWith("INV-1006", InvoiceStatus.PendingApproval, 50000m))));
+
+        var httpContext = new DefaultHttpContext();
+        httpContext.Items[HttpContextExtensions.SessionKey] = new UserSession("demo.manager", "Manager");
+        controller.ControllerContext = new ControllerContext { HttpContext = httpContext };
+
+        var result = controller.Approve("INV-1006");
+
+        var ok = Assert.IsType<OkObjectResult>(result.Result);
+        var invoice = Assert.IsType<Invoice>(ok.Value);
+        Assert.Equal(InvoiceStatus.Approved, invoice.Status);
+        Assert.Equal("Manager", invoice.DecidedBy);
+    }
 
     [Fact]
     public void Approve_ManagerCanApproveUpTo50kInclusive()
