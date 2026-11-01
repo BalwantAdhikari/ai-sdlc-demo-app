@@ -35,6 +35,23 @@ public class ApprovalService
     {
         var invoice = Find(invoiceId);
         EnsurePending(invoice);
+
+        if (invoice.Amount > DirectorApprovalLimit)
+        {
+            var approvalState = invoice.DecidedBy;
+            var isFirstLargeApproval = string.IsNullOrWhiteSpace(approvalState);
+
+            ValidateLargeInvoiceApproval(invoice, approver);
+            _repository.Update(invoice);
+
+            if (isFirstLargeApproval)
+            {
+                return CloneInvoice(invoice);
+            }
+
+            return invoice;
+        }
+
         ValidateSingleApproverLimit(invoice, approver);
 
         invoice.Status = InvoiceStatus.Approved;
@@ -89,7 +106,7 @@ public class ApprovalService
             return;
         }
 
-        if (invoice.Amount <= DirectorApprovalLimit && normalizedApprover.Equals("director", StringComparison.OrdinalIgnoreCase))
+        if (invoice.Amount > ManagerApprovalLimit && invoice.Amount <= DirectorApprovalLimit && normalizedApprover.Equals("director", StringComparison.OrdinalIgnoreCase))
         {
             return;
         }
@@ -97,4 +114,59 @@ public class ApprovalService
         throw new InvalidOperationException(
             $"Approver '{approver}' cannot approve invoice '{invoice.Id}' for amount {invoice.Amount:C} based on the current role limits.");
     }
+
+    private static void ValidateLargeInvoiceApproval(Invoice invoice, string approver)
+    {
+        var normalizedApprover = approver.Trim();
+
+        if (string.IsNullOrWhiteSpace(normalizedApprover))
+        {
+            throw new InvalidOperationException("Approver is required to approve an invoice.");
+        }
+
+        var firstApprover = invoice.DecidedBy;
+
+        if (string.IsNullOrWhiteSpace(firstApprover))
+        {
+            if (!normalizedApprover.Equals("manager", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new InvalidOperationException(
+                    $"Invoice '{invoice.Id}' requires a manager as the first approver before a director can approve it.");
+            }
+
+            invoice.DecidedBy = normalizedApprover;
+            invoice.DecidedAt = DateTime.UtcNow;
+            invoice.Status = InvoiceStatus.PendingApproval;
+            return;
+        }
+
+        if (!normalizedApprover.Equals("director", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(firstApprover, normalizedApprover, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException(
+                $"Invoice '{invoice.Id}' requires a different director as the second approver for amounts above {DirectorApprovalLimit:C}.");
+        }
+
+        if (!string.Equals(firstApprover, "manager", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException(
+                $"Invoice '{invoice.Id}' requires a manager as the first approver before a director can approve it.");
+        }
+
+        invoice.Status = InvoiceStatus.Approved;
+        invoice.DecidedBy = normalizedApprover;
+        invoice.DecidedAt = DateTime.UtcNow;
+    }
+
+    private static Invoice CloneInvoice(Invoice invoice) => new()
+    {
+        Id = invoice.Id,
+        CustomerName = invoice.CustomerName,
+        Amount = invoice.Amount,
+        Status = invoice.Status,
+        CreatedAt = invoice.CreatedAt,
+        DecidedBy = invoice.DecidedBy,
+        DecidedAt = invoice.DecidedAt,
+        DecisionNote = invoice.DecisionNote
+    };
 }
