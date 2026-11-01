@@ -70,12 +70,12 @@ public class ApprovalServiceTests
     [Fact]
     public void Approve_SetsStatusApproverAndTimestamp()
     {
-        var service = ServiceFor(InvoiceWith("INV-1", InvoiceStatus.PendingApproval));
+        var service = ServiceFor(InvoiceWith("INV-1", InvoiceStatus.PendingApproval, 25000m));
 
-        var result = service.Approve("INV-1", "demo.approver");
+        var result = service.Approve("INV-1", "manager");
 
         Assert.Equal(InvoiceStatus.Approved, result.Status);
-        Assert.Equal("demo.approver", result.DecidedBy);
+        Assert.Equal("manager", result.DecidedBy);
         Assert.NotNull(result.DecidedAt);
     }
 

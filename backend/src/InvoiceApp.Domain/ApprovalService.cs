@@ -6,6 +6,9 @@ namespace InvoiceApp.Domain;
 /// </summary>
 public class ApprovalService
 {
+    private const decimal ManagerApprovalLimit = 50_000m;
+    private const decimal DirectorApprovalLimit = 500_000m;
+
     private readonly IInvoiceRepository _repository;
 
     public ApprovalService(IInvoiceRepository repository)
@@ -32,6 +35,7 @@ public class ApprovalService
     {
         var invoice = Find(invoiceId);
         EnsurePending(invoice);
+        ValidateSingleApproverLimit(invoice, approver);
 
         invoice.Status = InvoiceStatus.Approved;
         invoice.DecidedBy = approver;
@@ -69,5 +73,28 @@ public class ApprovalService
             throw new InvalidOperationException(
                 $"Invoice {invoice.Id} is {invoice.Status}; only pending invoices can be decided.");
         }
+    }
+
+    private static void ValidateSingleApproverLimit(Invoice invoice, string approver)
+    {
+        var normalizedApprover = approver.Trim();
+
+        if (string.IsNullOrWhiteSpace(normalizedApprover))
+        {
+            throw new InvalidOperationException("Approver is required to approve an invoice.");
+        }
+
+        if (invoice.Amount <= ManagerApprovalLimit && normalizedApprover.Equals("manager", StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        if (invoice.Amount <= DirectorApprovalLimit && normalizedApprover.Equals("director", StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        throw new InvalidOperationException(
+            $"Approver '{approver}' cannot approve invoice '{invoice.Id}' for amount {invoice.Amount:C} based on the current role limits.");
     }
 }
