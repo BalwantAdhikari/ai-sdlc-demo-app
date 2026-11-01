@@ -60,6 +60,11 @@ public class ApprovalServiceTests
         Assert.Equal(InvoiceStatus.Approved, secondDecision.Status);
         Assert.Equal("director", secondDecision.DecidedBy);
         Assert.Equal(InvoiceStatus.PendingApproval, firstDecision.Status);
+        Assert.Equal("manager", firstDecision.DecidedBy);
+        Assert.Equal("manager", firstDecision.FirstApprover);
+        Assert.Equal("manager", secondDecision.FirstApprover);
+        Assert.Equal("director", secondDecision.SecondApprover);
+        Assert.NotNull(firstDecision.DecidedAt);
     }
 
     [Fact]
@@ -69,17 +74,28 @@ public class ApprovalServiceTests
 
         service.Approve("INV-6", "manager");
 
-        Assert.Throws<InvalidOperationException>(() => service.Approve("INV-6", "manager"));
+        var exception = Assert.Throws<InvalidOperationException>(() => service.Approve("INV-6", "manager"));
+        Assert.Contains("requires a director as the second approver", exception.Message);
+    }
+
+    [Fact]
+    public void Approve_LargeInvoiceRejectsInvalidFirstApprover()
+    {
+        var service = ServiceFor(InvoiceWith("INV-7", InvoiceStatus.PendingApproval, 600000m));
+
+        var exception = Assert.Throws<InvalidOperationException>(() => service.Approve("INV-7", "director"));
+        Assert.Contains("requires a manager as the first approver", exception.Message);
     }
 
     [Fact]
     public void Approve_LargeInvoiceRejectsNonDirectorSecondApprover()
     {
-        var service = ServiceFor(InvoiceWith("INV-7", InvoiceStatus.PendingApproval, 600000m));
+        var service = ServiceFor(InvoiceWith("INV-8", InvoiceStatus.PendingApproval, 600000m));
 
-        service.Approve("INV-7", "manager");
+        service.Approve("INV-8", "manager");
 
-        Assert.Throws<InvalidOperationException>(() => service.Approve("INV-7", "manager"));
+        var exception = Assert.Throws<InvalidOperationException>(() => service.Approve("INV-8", "employee"));
+        Assert.Contains("requires a director as the second approver", exception.Message);
     }
 
     [Fact]
@@ -117,7 +133,35 @@ public class ApprovalServiceTests
     {
         var service = ServiceFor(InvoiceWith("INV-1", InvoiceStatus.Draft));
 
-        Assert.Throws<InvalidOperationException>(() => service.Approve("INV-1", "demo.approver"));
+        var exception = Assert.Throws<InvalidOperationException>(() => service.Approve("INV-1", "demo.approver"));
+        Assert.Contains("only pending invoices can be decided", exception.Message);
+    }
+
+    [Fact]
+    public void Approve_RejectsBlankApprover()
+    {
+        var service = ServiceFor(InvoiceWith("INV-blank", InvoiceStatus.PendingApproval, 25000m));
+
+        var exception = Assert.Throws<InvalidOperationException>(() => service.Approve("INV-blank", "   "));
+        Assert.Contains("Approver is required", exception.Message);
+    }
+
+    [Fact]
+    public void Approve_RejectsNullApprover()
+    {
+        var service = ServiceFor(InvoiceWith("INV-null-approver", InvoiceStatus.PendingApproval, 25000m));
+
+        var exception = Assert.Throws<InvalidOperationException>(() => service.Approve("INV-null-approver", null!));
+        Assert.Contains("Approver is required", exception.Message);
+    }
+
+    [Fact]
+    public void Approve_LargeInvoiceRejectsBlankApprover()
+    {
+        var service = ServiceFor(InvoiceWith("INV-large-blank", InvoiceStatus.PendingApproval, 600000m));
+
+        var exception = Assert.Throws<InvalidOperationException>(() => service.Approve("INV-large-blank", "   "));
+        Assert.Contains("Approver is required", exception.Message);
     }
 
     [Fact]
@@ -137,6 +181,8 @@ public class ApprovalServiceTests
 
         Assert.Equal(InvoiceStatus.Rejected, result.Status);
         Assert.Equal("Duplicate invoice", result.DecisionNote);
+        Assert.Equal("demo.approver", result.DecidedBy);
+        Assert.NotNull(result.DecidedAt);
     }
 
     [Fact]
@@ -144,6 +190,8 @@ public class ApprovalServiceTests
     {
         var service = ServiceFor(InvoiceWith("INV-1", InvoiceStatus.PendingApproval));
 
-        Assert.Throws<ArgumentException>(() => service.Reject("INV-1", "demo.approver", "  "));
+        var exception = Assert.Throws<ArgumentException>(() => service.Reject("INV-1", "demo.approver", "  "));
+        Assert.Equal("reason", exception.ParamName);
+        Assert.Contains("A reason is required", exception.Message);
     }
 }

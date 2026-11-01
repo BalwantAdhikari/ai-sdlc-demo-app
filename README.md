@@ -31,6 +31,15 @@ Invoices move through Draft, Pending Approval, then Approved or Rejected.
 dotnet test backend/InvoiceApp.sln
 ```
 
+## AI interaction logging
+
+The repo includes a hook-friendly AI traceability workflow for agent sessions.
+
+- `.specify/extensions.yml` registers hook points for pre/post workflow capture.
+- `.specify/scripts/bash/log-ai-interaction.sh` appends structured JSONL records.
+- `logs/ai-interactions.jsonl` stores trace evidence, and `logs/ai-interactions-summary.md` provides a readable summary.
+- See [docs/ai-interaction-logging.md](docs/ai-interaction-logging.md) for the format and usage.
+
 ## Project layout
 
 ```

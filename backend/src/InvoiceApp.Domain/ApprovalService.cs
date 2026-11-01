@@ -38,8 +38,7 @@ public class ApprovalService
 
         if (invoice.Amount > DirectorApprovalLimit)
         {
-            var approvalState = invoice.DecidedBy;
-            var isFirstLargeApproval = string.IsNullOrWhiteSpace(approvalState);
+            var isFirstLargeApproval = string.IsNullOrWhiteSpace(invoice.FirstApprover);
 
             ValidateLargeInvoiceApproval(invoice, approver);
             _repository.Update(invoice);
@@ -94,12 +93,12 @@ public class ApprovalService
 
     private static void ValidateSingleApproverLimit(Invoice invoice, string approver)
     {
-        var normalizedApprover = approver.Trim();
-
-        if (string.IsNullOrWhiteSpace(normalizedApprover))
+        if (string.IsNullOrWhiteSpace(approver))
         {
             throw new InvalidOperationException("Approver is required to approve an invoice.");
         }
+
+        var normalizedApprover = approver.Trim();
 
         if (invoice.Amount <= ManagerApprovalLimit && normalizedApprover.Equals("manager", StringComparison.OrdinalIgnoreCase))
         {
@@ -117,14 +116,13 @@ public class ApprovalService
 
     private static void ValidateLargeInvoiceApproval(Invoice invoice, string approver)
     {
-        var normalizedApprover = approver.Trim();
-
-        if (string.IsNullOrWhiteSpace(normalizedApprover))
+        if (string.IsNullOrWhiteSpace(approver))
         {
             throw new InvalidOperationException("Approver is required to approve an invoice.");
         }
 
-        var firstApprover = invoice.DecidedBy;
+        var normalizedApprover = approver.Trim();
+        var firstApprover = invoice.FirstApprover;
 
         if (string.IsNullOrWhiteSpace(firstApprover))
         {
@@ -134,6 +132,7 @@ public class ApprovalService
                     $"Invoice '{invoice.Id}' requires a manager as the first approver before a director can approve it.");
             }
 
+            invoice.FirstApprover = normalizedApprover;
             invoice.DecidedBy = normalizedApprover;
             invoice.DecidedAt = DateTime.UtcNow;
             invoice.Status = InvoiceStatus.PendingApproval;
@@ -153,6 +152,7 @@ public class ApprovalService
                 $"Invoice '{invoice.Id}' requires a manager as the first approver before a director can approve it.");
         }
 
+        invoice.SecondApprover = normalizedApprover;
         invoice.Status = InvoiceStatus.Approved;
         invoice.DecidedBy = normalizedApprover;
         invoice.DecidedAt = DateTime.UtcNow;
@@ -166,6 +166,8 @@ public class ApprovalService
         Status = invoice.Status,
         CreatedAt = invoice.CreatedAt,
         DecidedBy = invoice.DecidedBy,
+        FirstApprover = invoice.FirstApprover,
+        SecondApprover = invoice.SecondApprover,
         DecidedAt = invoice.DecidedAt,
         DecisionNote = invoice.DecisionNote
     };

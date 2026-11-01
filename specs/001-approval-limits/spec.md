@@ -16,51 +16,64 @@
 - Q: For invoices above 500,000, who must be the first and second approver? → A: Manager first, then a director.
 - Q: Which currency applies to the thresholds? → A: The base accounting currency for the invoice workflow.
 
+## Approval Policy Summary
+
+This feature follows a three-band approval model:
+
+- Amounts up to 50,000: a manager may approve a single invoice directly, and a director may also approve it directly.
+- Amounts above 50,000 and up to 500,000: only a director may approve a single invoice directly; a manager is not authorized to approve in this band.
+- Amounts above 500,000: the invoice requires a two-step approval pattern in which the first approver is a manager and the second approver is a different director.
+
+The policy is inclusive at the thresholds. Amounts equal to 50,000 and 500,000 are valid within the applicable role limit, and any amount above 500,000 triggers the dual-approval rule.
+
 ## User Scenarios & Testing *(mandatory)*
 
-### User Story 1 - Manager approves a standard invoice within limit (Priority: P1)
+### User Story 1 - Manager approves a standard invoice within the manager limit (Priority: P1)
 
-A manager needs to approve routine invoice work efficiently without exceeding their authority. The approval flow should permit valid approvals within the manager threshold while keeping larger approvals under higher review.
+A manager needs to approve routine invoice work efficiently without exceeding their authority. The approval flow should permit valid approvals within the manager threshold while forcing larger approvals through the appropriate higher-review path.
 
 **Why this priority**: This is the primary business flow for day-to-day invoice review and makes the new approval controls immediately usable for most transactions.
 
-**Independent Test**: A manager can approve an invoice below the manager threshold and the invoice moves to the next valid state without requiring additional approval.
+**Independent Test**: A manager can approve an invoice at or below 50,000 and the invoice moves to the next valid state without requiring a second approver.
 
 **Acceptance Scenarios**:
 
-1. **Given** an invoice amount is within the manager approval limit, **When** a manager submits approval, **Then** the approval is accepted and the invoice advances according to the approval workflow.
-2. **Given** an invoice amount is above the manager limit, **When** a manager attempts approval, **Then** the system rejects the action and explains the limit constraint.
+1. **Given** an invoice amount is 50,000 or less, **When** a manager submits approval, **Then** the approval is accepted and the invoice advances according to the approval workflow.
+2. **Given** an invoice amount is greater than 50,000, **When** a manager attempts approval without a director or second approval step, **Then** the system rejects the action and explains the role and amount constraint.
+3. **Given** an invoice amount is exactly 50,000, **When** the manager submits approval, **Then** the system accepts it because the threshold is inclusive.
 
 ---
 
-### User Story 2 - Director approves an invoice within their higher authority (Priority: P1)
+### User Story 2 - Director approves an invoice within the director limit and rejects out-of-policy single approval (Priority: P1)
 
-A director must be able to approve higher-value invoices without unnecessary escalation when the invoice stays within their policy ceiling. The policy should support director-only approvals for medium-sized transactions while protecting against over-approval.
+A director must be able to approve higher-value invoices without unnecessary escalation when the invoice stays within their policy ceiling. The policy should support director-only approvals for medium-sized transactions while protecting against manager approvals above the manager threshold and against invalid high-value patterns.
 
 **Why this priority**: Directors have higher approval authority, and the feature must allow valid approvals without creating friction for the appropriate role.
 
-**Independent Test**: A director can approve an invoice up to the director limit and the system accepts the decision when all policy rules are satisfied.
+**Independent Test**: A director can approve an invoice above 50,000 up to 500,000 and the system accepts the decision when all policy rules are satisfied.
 
 **Acceptance Scenarios**:
 
-1. **Given** an invoice amount is within the director approval limit, **When** a director approves it, **Then** the system accepts the approval and records the decision.
-2. **Given** an invoice amount exceeds the director limit but remains below the dual-approval threshold, **When** a director attempts approval, **Then** the system rejects the action because the amount requires a different approval pattern.
+1. **Given** an invoice amount is greater than 50,000 and less than or equal to 500,000, **When** a director approves it, **Then** the system accepts the approval and records the decision.
+2. **Given** an invoice amount is exactly 500,000, **When** a director approves it, **Then** the system accepts the approval because the threshold is inclusive.
+3. **Given** an invoice amount exceeds the director limit, **When** a director attempts a single-role approval, **Then** the system rejects the action because the amount requires a different approval pattern.
 
 ---
 
 ### User Story 3 - Large invoices require dual approval with a distinct director (Priority: P1)
 
-For very large invoice values, the business needs stronger oversight and a second reviewer. The process should require two distinct approvers and prevent a single person from approving the same invoice twice.
+For very large invoice values, the business needs stronger oversight and a second reviewer. The process must require two distinct approvers, with a manager first and a director second, and it must prevent a single user from approving the same invoice twice.
 
 **Why this priority**: This is the highest-risk policy rule and protects the business from excessive exposure or self-approval on large values.
 
-**Independent Test**: An invoice above the director threshold can only be approved when two different approvers satisfy the required role combination and the system rejects duplicate approvers.
+**Independent Test**: An invoice above 500,000 can only be approved when the first approver is a manager and the second approver is a different director, and the system rejects duplicate or non-compliant approvers.
 
 **Acceptance Scenarios**:
 
-1. **Given** an invoice exceeds the director threshold, **When** a valid manager and a director approve it in sequence, **Then** the invoice meets the required approval policy and proceeds normally.
-2. **Given** an invoice exceeds the director threshold, **When** the same user attempts to serve as both approvers, **Then** the system rejects the second approval and the invoice remains unchanged.
-3. **Given** an invoice exceeds the director threshold, **When** the second approval is supplied by a non-director, **Then** the action is rejected with a clear reason and no invoice state changes occur.
+1. **Given** an invoice exceeds 500,000, **When** a manager and then a different director approve it in sequence, **Then** the invoice meets the required approval policy and proceeds normally.
+2. **Given** an invoice exceeds 500,000, **When** the same user attempts to serve as both approvers, **Then** the system rejects the second approval and the invoice remains unchanged.
+3. **Given** an invoice exceeds 500,000, **When** the second approval is supplied by a non-director, **Then** the action is rejected with a clear reason and no invoice state changes occur.
+4. **Given** an invoice exceeds 500,000, **When** the first approver is not a manager, **Then** the system rejects the attempt because the approval order is invalid.
 
 ---
 
@@ -75,18 +88,20 @@ For very large invoice values, the business needs stronger oversight and a secon
 
 ### Functional Requirements
 
-- **FR-001**: The system MUST enforce approval limits by user role for invoice approval decisions.
-- **FR-002**: A manager MUST be able to approve invoices up to the manager limit.
-- **FR-003**: A director MUST be able to approve invoices up to the director limit.
-- **FR-004**: Invoices above the director limit MUST require approval from two distinct users.
+- **FR-001**: The system MUST enforce approval limits by user role for every invoice approval decision.
+- **FR-002**: For invoice amounts up to 50,000 inclusive, a manager MAY approve the invoice as a single approver.
+- **FR-003**: For invoice amounts above 50,000 and up to 500,000 inclusive, a director MAY approve the invoice as a single approver, and a manager MUST NOT approve that invoice without a valid alternate approval path.
+- **FR-004**: For invoice amounts above 500,000, the approval workflow MUST require two distinct approvers in sequence: a manager first and a different director second.
 - **FR-005**: The second approver for a large invoice MUST be a director.
 - **FR-006**: The system MUST prevent the same user from being counted as both approvers on a single invoice.
 - **FR-007**: Rejected approval attempts MUST return a clear reason that explains why the approval was denied.
-- **FR-008**: Rejected approval attempts MUST leave the invoice state and data unchanged.
-- **FR-009**: The system MUST distinguish between approvals that are valid within the role policy and approvals that fail the role-based limits.
+- **FR-008**: Rejected approval attempts MUST leave the invoice state, approval data, and related invoice values unchanged.
+- **FR-009**: The system MUST distinguish between approvals that are valid within the role policy and approvals that fail the role-based limits or required approval sequence.
 - **FR-010**: The system MUST support the documented business limits for manager and director approvals: manager up to 50,000 and director up to 500,000, with both thresholds treated as inclusive values.
-- **FR-011**: For invoices above 500,000, the system MUST require a manager as the first approver and a director as the second approver.
+- **FR-011**: For invoices above 500,000, the system MUST require a manager as the first approver and a director as the second approver, and it MUST reject any attempt that reverses the order or uses a non-director second approver.
 - **FR-012**: The approval limits MUST be evaluated in the base accounting currency for the invoice workflow; no conversion or multi-currency rule is required in this release.
+- **FR-013**: The system MUST reject any invalid approval attempt without partially updating invoice status, approval history, or other invoice data, so the invoice remains in the same state as before the failed decision.
+- **FR-014**: Unsupported or undefined roles MUST be treated as out-of-policy for the relevant approval decision until the business adds a separate exception or access model.
 
 ### Key Entities *(include if feature involves data)*
 

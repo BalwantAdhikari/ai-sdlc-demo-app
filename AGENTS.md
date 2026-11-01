@@ -20,6 +20,19 @@ Invoice approval demo app: ASP.NET Core 8 Web API with a small static web UI.
 - Every new rule or endpoint needs tests. Use `FakeInvoiceRepository` in tests.
 - Use clear names; no one-letter variables or `flag` parameters.
 - End-to-end tests use page objects and role-based locators (`getByRole`, `getByLabel`), never CSS or XPath selectors.
+- AI-assisted work must preserve traceability: record the tool, model, agent type, prompt, validation evidence, relevant files, human decisions, and final outcome.
+- Prefer automatic logging via the repo hook and skill workflow instead of relying on manual notes alone.
+
+## AI interaction logging
+
+- Structured AI interaction records are stored in `logs/ai-interactions.jsonl`.
+- A human-readable summary is maintained in `logs/ai-interactions-summary.md`.
+- The hook-backed script is `.specify/scripts/bash/log-ai-interaction.sh` and the hook configuration is in `.specify/extensions.yml`.
+- When an AI session uses skills or sub-agents, include them in the record with purpose and status.
+- Capture tool usage such as bash/git/workspace actions and MCP external integrations whenever they occur.
+- Include verification evidence such as test commands, build status, changed files, and commit/session references when available.
+- Record human intervention separately so the log shows where the user corrected, validated, or approved the AI output.
+- If a task is partial, failed, or reworked, reflect that honestly in the `status` and `outcome` fields.
 
 ## Commands
 

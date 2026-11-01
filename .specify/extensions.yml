@@ -1,0 +1,28 @@
+hooks:
+  before_specify:
+    - name: "ai-interaction-log"
+      command: "bash .specify/scripts/bash/log-ai-interaction.sh before_specify agent \"AI requirement analysis\""
+      description: "Capture a structured trace record before the specification workflow begins."
+      optional: true
+      enabled: true
+
+  after_specify:
+    - name: "ai-interaction-log"
+      command: "bash .specify/scripts/bash/log-ai-interaction.sh after_specify agent \"Specification workflow completed\""
+      description: "Capture the outcome of the specification workflow."
+      optional: true
+      enabled: true
+
+  before_plan:
+    - name: "ai-interaction-log"
+      command: "bash .specify/scripts/bash/log-ai-interaction.sh before_plan agent \"Planning workflow starting\""
+      description: "Capture a structured trace record before planning begins."
+      optional: true
+      enabled: true
+
+  after_implement:
+    - name: "ai-interaction-log"
+      command: "bash .specify/scripts/bash/log-ai-interaction.sh --summary"
+      description: "Refresh the human-readable AI interaction summary after implementation is complete."
+      optional: true
+      enabled: true
