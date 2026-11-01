@@ -2,13 +2,15 @@
 
 ## MVP execution plan
 
-- [ ] T001 [US1] Review the approval flow and define the manager/director threshold rules and shared validation path in backend/src/InvoiceApp.Domain/ApprovalService.cs
-- [ ] T002 [P] [US1] Add failing unit tests for valid manager approval, valid director approval, manager over-limit rejection, duplicate approver rejection, and large-invoice second-director requirement in backend/tests/InvoiceApp.Tests/ApprovalServiceTests.cs
-- [ ] T003 [US1] Implement the approval policy in backend/src/InvoiceApp.Domain/ApprovalService.cs: manager up to 50,000 inclusive, director up to 500,000 inclusive, invoice above 500,000 requires manager first and a different director second, and the same user cannot count twice
-- [ ] T004 [P] Validate API contract semantics and run the repository regression suite with `dotnet test backend/InvoiceApp.sln`, confirming invalid approvals return a clear reason and leave the invoice unchanged in backend/src/InvoiceApp.Api/Controllers/ApprovalsController.cs and backend/tests/InvoiceApp.Tests/
+- [X] T001 [US1] Review the current approval service and confirm where the single-approver limit rules belong in backend/src/InvoiceApp.Domain/ApprovalService.cs
+- [X] T002 [P] [US1] Add failing unit tests for manager approval at 50,000 inclusive and director approval at 500,000 inclusive in backend/tests/InvoiceApp.Tests/ApprovalServiceTests.cs
+- [ ] T003 [US1] Implement the single-approver limit rule in backend/src/InvoiceApp.Domain/ApprovalService.cs so manager approvals are allowed up to 50,000 inclusive and director approvals are allowed up to 500,000 inclusive
+- [ ] T004 [P] [US2] Add failing unit tests for duplicate approver rejection, invalid second-approver rejection, and large-invoice dual-approval success in backend/tests/InvoiceApp.Tests/ApprovalServiceTests.cs
+- [ ] T005 [US2] Implement the two-approver rule in backend/src/InvoiceApp.Domain/ApprovalService.cs requiring a manager first, a different director second, and rejecting any duplicate or out-of-policy approver combination
+- [ ] T006 [P] Validate the API contract and run the full regression suite with dotnet test backend/InvoiceApp.sln in backend/src/InvoiceApp.Api/Controllers/ApprovalsController.cs and backend/tests/InvoiceApp.Tests/
 
-## Why this is the right scope
+## Why the split is intentional
 
-- These four tasks cover the full approval-limit story without expanding into unrelated work.
-- The plan keeps the business rule in the domain layer, where the app already enforces approval lifecycle logic.
-- The tests are written before or alongside the implementation to validate the acceptance criteria without guessing at edge cases.
+- The single-approver limits are the first business gate and can be validated independently before large-invoice enforcement is added.
+- The two-approver rule is a separate policy layer with its own failing tests, clearer guardrails, and easier rollback if the large-invoice path needs adjustment.
+- This keeps the implementation incremental, reviewable, and aligned with the requirement to land the simpler approval limits first and then the stricter dual-approval rule.

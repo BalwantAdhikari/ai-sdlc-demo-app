@@ -5,11 +5,49 @@ namespace InvoiceApp.Tests;
 
 public class ApprovalServiceTests
 {
-    private static Invoice InvoiceWith(string id, InvoiceStatus status) =>
-        new() { Id = id, CustomerName = "Test School", Amount = 100m, Status = status };
+    private static Invoice InvoiceWith(string id, InvoiceStatus status, decimal amount = 100m) =>
+        new() { Id = id, CustomerName = "Test School", Amount = amount, Status = status };
 
     private static ApprovalService ServiceFor(params Invoice[] invoices) =>
         new(new FakeInvoiceRepository(invoices));
+
+    [Fact]
+    public void Approve_ManagerCanApproveUpTo50kInclusive()
+    {
+        var service = ServiceFor(InvoiceWith("INV-1", InvoiceStatus.PendingApproval, 50000m));
+
+        var result = service.Approve("INV-1", "manager");
+
+        Assert.Equal(InvoiceStatus.Approved, result.Status);
+        Assert.Equal("manager", result.DecidedBy);
+    }
+
+    [Fact]
+    public void Approve_DirectorCanApproveUpTo500kInclusive()
+    {
+        var service = ServiceFor(InvoiceWith("INV-2", InvoiceStatus.PendingApproval, 500000m));
+
+        var result = service.Approve("INV-2", "director");
+
+        Assert.Equal(InvoiceStatus.Approved, result.Status);
+        Assert.Equal("director", result.DecidedBy);
+    }
+
+    [Fact]
+    public void Approve_ManagerRejectsAmountOver50k()
+    {
+        var service = ServiceFor(InvoiceWith("INV-3", InvoiceStatus.PendingApproval, 50001m));
+
+        Assert.Throws<InvalidOperationException>(() => service.Approve("INV-3", "manager"));
+    }
+
+    [Fact]
+    public void Approve_DirectorRejectsAmountOver500k()
+    {
+        var service = ServiceFor(InvoiceWith("INV-4", InvoiceStatus.PendingApproval, 500001m));
+
+        Assert.Throws<InvalidOperationException>(() => service.Approve("INV-4", "director"));
+    }
 
     [Fact]
     public void Submit_MovesDraftToPendingApproval()
