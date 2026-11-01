@@ -50,6 +50,39 @@ public class ApprovalServiceTests
     }
 
     [Fact]
+    public void Approve_LargeInvoiceRequiresManagerThenDirector()
+    {
+        var service = ServiceFor(InvoiceWith("INV-5", InvoiceStatus.PendingApproval, 600000m));
+
+        var firstDecision = service.Approve("INV-5", "manager");
+        var secondDecision = service.Approve("INV-5", "director");
+
+        Assert.Equal(InvoiceStatus.Approved, secondDecision.Status);
+        Assert.Equal("director", secondDecision.DecidedBy);
+        Assert.Equal(InvoiceStatus.PendingApproval, firstDecision.Status);
+    }
+
+    [Fact]
+    public void Approve_LargeInvoiceRejectsDuplicateApprover()
+    {
+        var service = ServiceFor(InvoiceWith("INV-6", InvoiceStatus.PendingApproval, 600000m));
+
+        service.Approve("INV-6", "manager");
+
+        Assert.Throws<InvalidOperationException>(() => service.Approve("INV-6", "manager"));
+    }
+
+    [Fact]
+    public void Approve_LargeInvoiceRejectsNonDirectorSecondApprover()
+    {
+        var service = ServiceFor(InvoiceWith("INV-7", InvoiceStatus.PendingApproval, 600000m));
+
+        service.Approve("INV-7", "manager");
+
+        Assert.Throws<InvalidOperationException>(() => service.Approve("INV-7", "manager"));
+    }
+
+    [Fact]
     public void Submit_MovesDraftToPendingApproval()
     {
         var invoice = InvoiceWith("INV-1", InvoiceStatus.Draft);
