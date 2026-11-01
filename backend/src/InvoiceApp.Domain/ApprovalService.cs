@@ -144,7 +144,7 @@ public class ApprovalService
             string.Equals(firstApprover, normalizedApprover, StringComparison.OrdinalIgnoreCase))
         {
             throw new InvalidOperationException(
-                $"Invoice '{invoice.Id}' requires a different director as the second approver for amounts above {DirectorApprovalLimit:C}.");
+                $"Invoice '{invoice.Id}' requires a director as the second approver for amounts above {DirectorApprovalLimit:C}.");
         }
 
         if (!string.Equals(firstApprover, "manager", StringComparison.OrdinalIgnoreCase))

@@ -13,7 +13,7 @@
 ### Session 2026-11-01
 
 - Q: Are approval thresholds inclusive? → A: Yes, values equal to 50,000 and 500,000 are valid within the applicable role limit.
-- Q: For invoices above 500,000, who must be the first and second approver? → A: Manager first, then a different Director.
+- Q: For invoices above 500,000, who must be the first and second approver? → A: Manager first, then a director.
 - Q: Which currency applies to the thresholds? → A: The base accounting currency for the invoice workflow.
 
 ## User Scenarios & Testing *(mandatory)*
@@ -58,7 +58,7 @@ For very large invoice values, the business needs stronger oversight and a secon
 
 **Acceptance Scenarios**:
 
-1. **Given** an invoice exceeds the director threshold, **When** a valid manager and a different director approve it in sequence, **Then** the invoice meets the required approval policy and proceeds normally.
+1. **Given** an invoice exceeds the director threshold, **When** a valid manager and a director approve it in sequence, **Then** the invoice meets the required approval policy and proceeds normally.
 2. **Given** an invoice exceeds the director threshold, **When** the same user attempts to serve as both approvers, **Then** the system rejects the second approval and the invoice remains unchanged.
 3. **Given** an invoice exceeds the director threshold, **When** the second approval is supplied by a non-director, **Then** the action is rejected with a clear reason and no invoice state changes occur.
 
@@ -85,7 +85,7 @@ For very large invoice values, the business needs stronger oversight and a secon
 - **FR-008**: Rejected approval attempts MUST leave the invoice state and data unchanged.
 - **FR-009**: The system MUST distinguish between approvals that are valid within the role policy and approvals that fail the role-based limits.
 - **FR-010**: The system MUST support the documented business limits for manager and director approvals: manager up to 50,000 and director up to 500,000, with both thresholds treated as inclusive values.
-- **FR-011**: For invoices above 500,000, the system MUST require a manager as the first approver and a different director as the second approver.
+- **FR-011**: For invoices above 500,000, the system MUST require a manager as the first approver and a director as the second approver.
 - **FR-012**: The approval limits MUST be evaluated in the base accounting currency for the invoice workflow; no conversion or multi-currency rule is required in this release.
 
 ### Key Entities *(include if feature involves data)*

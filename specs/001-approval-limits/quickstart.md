@@ -17,7 +17,7 @@
    - Director approves an invoice at 500,000 and succeeds.
    - Manager attempts to approve an invoice above 50,000 and receives a clear rejection.
    - Director attempts to approve an invoice above 500,000 without the required second approval and is rejected.
-   - Large invoice receives a manager approval followed by a different director approval and succeeds.
+   - Large invoice receives a manager approval followed by a director approval and succeeds.
    - Same user attempts to count as both approvers and is rejected.
    - Invalid approval attempt leaves the invoice state unchanged.
 

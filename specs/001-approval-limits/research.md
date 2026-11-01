@@ -18,7 +18,7 @@ The current project already follows a domain-first design: `ApprovalService` own
 
 - Manager approval threshold: 50,000 inclusive.
 - Director approval threshold: 500,000 inclusive.
-- Large invoice rule: amounts above 500,000 require a manager as the first approver and a different director as the second approver.
+- Large invoice rule: amounts above 500,000 require a manager as the first approver and a director as the second approver.
 - Duplicate approvers are disallowed on the same invoice.
 - Rejected approval attempts must return a clear reason and leave the invoice unchanged.
 - For this release, approval limits are evaluated in the base accounting currency used by the invoice workflow.

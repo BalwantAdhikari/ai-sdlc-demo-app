@@ -43,7 +43,7 @@ Request body:
 
 - Manager may approve values up to 50,000 inclusive.
 - Director may approve values up to 500,000 inclusive.
-- Amounts above 500,000 require a manager approval and a different director approval.
+- Amounts above 500,000 require a manager approval and a director approval.
 - The same user cannot serve as both approvers for a single invoice.
 - A rejected approval attempt returns a clear reason and leaves invoice state unchanged.
 

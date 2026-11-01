@@ -53,7 +53,7 @@ A single approval step recorded for an invoice when a user acts.
 - Amounts equal to 50,000 or 500,000 are valid within the relevant role limit.
 - Manager approval is allowed only when the total amount is less than or equal to 50,000.
 - Director approval is allowed only when the total amount is less than or equal to 500,000.
-- Amounts above 500,000 require a manager first and a different director second.
+- Amounts above 500,000 require a manager first and a director second.
 - Duplicate approvers are invalid on the same invoice.
 - Rejected approval attempts must not alter the invoice state.
 
