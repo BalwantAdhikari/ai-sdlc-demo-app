@@ -14,6 +14,8 @@ Open http://localhost:5000 and sign in:
 | --- | --- | --- |
 | `demo.approver` | `ChangeMe123!` | Approver |
 | `demo.admin` | `ChangeMe123!` | Admin |
+| `demo.manager` | `ChangeMe123!` | Manager |
+| `demo.director` | `ChangeMe123!` | Director |
 
 These are demo accounts for a local, in-memory app. They are not real credentials.
 
@@ -30,6 +32,15 @@ Invoices move through Draft, Pending Approval, then Approved or Rejected.
 ```
 dotnet test backend/InvoiceApp.sln
 ```
+
+## AI interaction logging
+
+The repo includes a hook-friendly AI traceability workflow for agent sessions.
+
+- `.specify/extensions.yml` registers hook points for pre/post workflow capture.
+- `.specify/scripts/bash/log-ai-interaction.sh` appends structured JSONL records.
+- `logs/ai-interactions.jsonl` stores trace evidence, and `logs/ai-interactions-summary.md` provides a readable summary.
+- See [docs/ai-interaction-logging.md](docs/ai-interaction-logging.md) for the format and usage.
 
 ## Project layout
 

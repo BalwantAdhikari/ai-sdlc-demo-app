@@ -12,6 +12,8 @@
     <PackageReference Include="coverlet.collector" Version="6.0.2" />
   </ItemGroup>
   <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <ProjectReference Include="..\..\src\InvoiceApp.Domain\InvoiceApp.Domain.csproj" />
+    <ProjectReference Include="..\..\src\InvoiceApp.Api\InvoiceApp.Api.csproj" />
   </ItemGroup>
 </Project>
